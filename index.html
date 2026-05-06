@@ -10,50 +10,16 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 
 <style>
-body{
-    font-family:Arial;
-    background:#020617;
-    color:white;
-    margin:0;
-}
-
-.header{
-    padding:15px;
-    text-align:center;
-    background:#111827;
-}
-
-.container{
-    padding:15px;
-}
-
-.card{
-    background:#111827;
-    padding:10px;
-    margin-top:10px;
-    border-radius:10px;
-}
-
+body{font-family:Arial;background:#020617;color:white;margin:0;}
+.header{text-align:center;padding:15px;background:#111827;}
+.container{padding:15px;}
+.card{background:#111827;padding:10px;margin-top:10px;border-radius:10px;}
 .top1{background:gold;color:black;}
 .top2{background:silver;color:black;}
 .top3{background:orange;color:black;}
-
-input,button{
-    width:100%;
-    padding:10px;
-    margin-top:10px;
-    border-radius:8px;
-    border:none;
-}
-
-#adminBox{
-    position:fixed;
-    bottom:20px;
-    right:20px;
-    background:#111827;
-    padding:10px;
-    border-radius:10px;
-}
+input,button{width:100%;padding:10px;margin-top:10px;border-radius:8px;border:none;}
+#adminBox{position:fixed;bottom:20px;right:20px;background:#111827;padding:10px;border-radius:10px;}
+.qris{width:100%;border-radius:10px;margin-top:10px;}
 </style>
 </head>
 
@@ -61,13 +27,15 @@ input,button{
 
 <div class="header">
 <h2>💛 Donasi untuk Bayi yang Ditemukan</h2>
-<p>Bantu kebutuhan susu, kesehatan, dan masa depan 🙏</p>
+<p>Bantu kebutuhan susu & masa depan 🙏</p>
+<p><b>DANA:</b> 08XXXXXXXX</p>
+<img src="qris.jpg" class="qris">
 <p id="statusAdmin"></p>
 </div>
 
 <div class="container">
 
-<h3>💸 Donasi</h3>
+<h3>💸 Kirim Donasi</h3>
 <input id="nama" placeholder="Nama">
 <input id="jumlah" type="number" placeholder="Jumlah">
 <input id="bukti" type="file">
@@ -102,126 +70,133 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const storage = firebase.storage();
 
-let isAdmin = localStorage.getItem("admin") === "true";
+let isAdmin = localStorage.getItem("admin")==="true";
 
-// tampilkan status admin
 if(isAdmin){
-    document.getElementById("statusAdmin").innerText="👑 MODE ADMIN AKTIF";
+ document.getElementById("statusAdmin").innerText="👑 MODE ADMIN";
 }
 
 // LOGIN
 function login(){
-    if(document.getElementById("pass").value==="ADMIN123"){
-        localStorage.setItem("admin","true");
-        alert("Login berhasil");
-        location.reload();
-    } else {
-        alert("Password salah");
-    }
+ if(document.getElementById("pass").value==="ADMIN123"){
+  localStorage.setItem("admin","true");
+  location.reload();
+ } else alert("Salah");
 }
-
-// LOGOUT
 function logout(){
-    localStorage.removeItem("admin");
-    location.reload();
+ localStorage.removeItem("admin");
+ location.reload();
 }
 
 // BADGE
 function badge(j){
-    if(j>=1000000) return "👑 LEGEND";
-    if(j>=500000) return "💎 SULTAN";
-    if(j>=100000) return "🔥 VIP";
-    return "⭐";
+ if(j>=1000000)return "👑";
+ if(j>=500000)return "💎";
+ if(j>=100000)return "🔥";
+ return "⭐";
 }
 
-// KIRIM DONASI (FIX)
+// 🔥 FIX DONASI (ANTI ERROR)
 function kirimDonasi(){
-    let nama=document.getElementById("nama").value;
-    let jumlah=document.getElementById("jumlah").value;
-    let file=document.getElementById("bukti").files[0];
+ let nama=namaEl.value;
+ let jumlah=jumlahEl.value;
+ let file=buktiEl.files[0];
 
-    if(!nama||!jumlah||!file){
-        alert("Lengkapi semua!");
-        return;
-    }
+ if(!nama||!jumlah){
+  alert("Isi nama & jumlah!");
+  return;
+ }
 
-    let ref=storage.ref("bukti/"+Date.now());
-
-    ref.put(file)
-    .then(s=>s.ref.getDownloadURL())
-    .then(url=>{
-        return db.ref("donasi").push({
-            nama,
-            jumlah:parseInt(jumlah),
-            bukti:url,
-            status:"pending"
-        });
-    })
-    .then(()=>{
-        alert("🙏 Terima kasih atas donasi Anda!\nSemoga sehat & rezeki lancar 🤲");
-    })
-    .catch(err=>{
-        alert("Error: "+err.message);
-        console.log(err);
-    });
+ // kalau ada file → upload
+ if(file){
+  let ref=storage.ref("bukti/"+Date.now());
+  ref.put(file)
+  .then(s=>s.ref.getDownloadURL())
+  .then(url=>{
+    simpan(nama,jumlah,url);
+  })
+  .catch(()=>{
+    // kalau gagal upload tetap lanjut
+    simpan(nama,jumlah,"-");
+  });
+ } else {
+  simpan(nama,jumlah,"-");
+ }
 }
 
-// LOAD DATA (FIX)
+// SIMPAN
+function simpan(nama,jumlah,url){
+ db.ref("donasi").push({
+  nama,
+  jumlah:parseInt(jumlah),
+  bukti:url,
+  status:"pending"
+ });
+
+ alert("🙏 Terima kasih!\nSemoga rezeki lancar & sehat selalu 🤲");
+
+ // reset form
+ namaEl.value="";
+ jumlahEl.value="";
+ buktiEl.value="";
+}
+
+// LOAD
 db.ref("donasi").on("value", snap=>{
-    let data=snap.val()||{};
-    let leader=document.getElementById("leaderboard");
-    let pending=document.getElementById("pending");
+ let data=snap.val()||{};
+ let leader=leaderboard;
+ let pendingEl=pending;
 
-    leader.innerHTML="";
-    pending.innerHTML="";
+ leader.innerHTML="";
+ pendingEl.innerHTML="";
 
-    let arr=[];
+ let arr=[];
 
-    for(let id in data){
-        let d=data[id];
+ for(let id in data){
+  let d=data[id];
 
-        if(d.status==="approved"){
-            arr.push({id,...d});
-        }
+  if(d.status==="approved") arr.push({id,...d});
 
-        if(d.status==="pending" && isAdmin){
-            pending.innerHTML+=`
-            <div class="card">
-            ${d.nama} - Rp${d.jumlah}<br>
-            <button onclick="acc('${id}')">ACC</button>
-            <button onclick="hapus('${id}')">Hapus</button>
-            </div>`;
-        }
-    }
+  if(d.status==="pending" && isAdmin){
+   pendingEl.innerHTML+=`
+   <div class="card">
+   ${d.nama} - Rp${d.jumlah}<br>
+   <button onclick="acc('${id}')">ACC</button>
+   <button onclick="hapus('${id}')">Hapus</button>
+   </div>`;
+  }
+ }
 
-    arr.sort((a,b)=>b.jumlah-a.jumlah);
+ arr.sort((a,b)=>b.jumlah-a.jumlah);
 
-    arr.forEach((d,i)=>{
-        let cls="card";
-        if(i==0) cls+=" top1";
-        if(i==1) cls+=" top2";
-        if(i==2) cls+=" top3";
+ arr.forEach((d,i)=>{
+  let cls="card";
+  if(i==0) cls+=" top1";
+  if(i==1) cls+=" top2";
+  if(i==2) cls+=" top3";
 
-        leader.innerHTML+=`
-        <div class="${cls}">
-        ${i+1}. ${d.nama} - ${badge(d.jumlah)}<br>
-        Rp${d.jumlah}
-        ${isAdmin?`<button onclick="hapus('${d.id}')">Hapus</button>`:""}
-        </div>`;
-    });
+  leader.innerHTML+=`
+  <div class="${cls}">
+  ${i+1}. ${d.nama} ${badge(d.jumlah)}<br>
+  Rp${d.jumlah}
+  ${isAdmin?`<button onclick="hapus('${d.id}')">Hapus</button>`:""}
+  </div>`;
+ });
 });
 
 // ACTION
 function acc(id){
-    db.ref("donasi/"+id).update({status:"approved"});
+ db.ref("donasi/"+id).update({status:"approved"});
+}
+function hapus(id){
+ if(confirm("Hapus?")) db.ref("donasi/"+id).remove();
 }
 
-function hapus(id){
-    if(confirm("Hapus data?")){
-        db.ref("donasi/"+id).remove();
-    }
-}
+// shortcut
+const namaEl=document.getElementById("nama");
+const jumlahEl=document.getElementById("jumlah");
+const buktiEl=document.getElementById("bukti");
 </script>
 
 </body>
-</html>
+    </html>
