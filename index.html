@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Donasi Dewa</title>
+<title>Donasi Dewa Clean</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
@@ -29,34 +29,30 @@ body{
  z-index:999;
  animation:fadeOut 3s forwards 3s;
 }
-#splash h1{
- color:#facc15;
- text-align:center;
- animation:zoom 2s ease;
-}
 @keyframes fadeOut{to{opacity:0;visibility:hidden;}}
-@keyframes zoom{from{transform:scale(.5);}to{transform:scale(1);}}
 
 /* NAV */
 .nav{
  display:flex;
  justify-content:space-between;
- padding:10px;
+ padding:12px;
  background:#111827;
+ position:sticky;
+ top:0;
+ z-index:10;
 }
 
 /* PAGE */
 .page{display:none;padding:15px;}
 .active{display:block;}
 
-/* GLASS */
+/* CARD */
 .glass{
  background:rgba(255,255,255,0.05);
  backdrop-filter:blur(15px);
  border-radius:15px;
  padding:15px;
- margin-top:15px;
- box-shadow:0 0 20px rgba(255,255,255,0.1);
+ margin-bottom:15px;
 }
 
 /* INPUT */
@@ -73,34 +69,20 @@ button{
 }
 
 /* QR */
-.qris{width:100%;border-radius:10px;}
+.qris{width:100%;border-radius:10px;margin-top:10px;}
 
-/* CARD */
+/* LIST */
 .card{
  margin-top:10px;
  padding:12px;
- border-radius:12px;
- animation:slideUp .5s ease;
-}
-@keyframes slideUp{
- from{transform:translateY(30px);opacity:0;}
- to{transform:translateY(0);opacity:1;}
+ border-radius:10px;
+ background:#111827;
 }
 
-/* TOP EFFECT */
-.top1{
- background:linear-gradient(45deg,#facc15,#eab308);
- color:black;
- box-shadow:0 0 25px gold;
- animation:pulse 1.5s infinite;
-}
+/* TOP */
+.top1{background:gold;color:black;}
 .top2{background:silver;color:black;}
 .top3{background:orange;color:black;}
-@keyframes pulse{
- 0%{transform:scale(1)}
- 50%{transform:scale(1.05)}
- 100%{transform:scale(1)}
-}
 
 /* NOTIF */
 #notif{
@@ -115,14 +97,40 @@ button{
  z-index:9999;
 }
 
-/* ADMIN */
-#adminBox{
+/* ADMIN BUTTON */
+#adminBtn{
  position:fixed;
  bottom:20px;
  right:20px;
+ background:#22c55e;
+ border-radius:50%;
+ width:55px;
+ height:55px;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ font-size:22px;
+}
+
+/* ADMIN PANEL */
+#adminPanel{
+ position:fixed;
+ top:0;
+ left:0;
+ width:100%;
+ height:100%;
+ background:rgba(0,0,0,0.7);
+ display:none;
+ align-items:center;
+ justify-content:center;
+}
+
+.adminBox{
  background:#111827;
- padding:10px;
- border-radius:10px;
+ padding:20px;
+ border-radius:12px;
+ width:90%;
+ max-width:300px;
 }
 </style>
 </head>
@@ -130,7 +138,7 @@ button{
 <body>
 
 <div id="splash">
-<h1>💛 Donasi Bayi Ditemukan<br><br>Bantu masa depan mereka 🙏</h1>
+<h2>💛 Donasi Bayi Ditemukan<br>Bantu masa depan 🙏</h2>
 </div>
 
 <div id="notif"></div>
@@ -138,7 +146,7 @@ button{
 <div class="nav">
 <div>
 <button onclick="showPage('home')">Home</button>
-<button onclick="showPage('list')">Daftar Donatur</button>
+<button onclick="showPage('list')">Donatur</button>
 </div>
 </div>
 
@@ -146,31 +154,29 @@ button{
 <div id="home" class="page active">
 
 <div class="glass">
-<h2>💸 Donasi</h2>
+<h3>💸 Donasi</h3>
 <p><b>DANA:</b> 08XXXXXXXX</p>
 <img src="qris.jpg" class="qris">
 
 <input id="nama" placeholder="Nama">
 <input id="jumlah" type="number" placeholder="Jumlah">
 <input id="bukti" type="file">
-
 <button onclick="kirimDonasi()">Kirim Donasi</button>
 </div>
 
 <div class="glass">
-<h2>🏆 Leaderboard</h2>
+<h3>🏆 Leaderboard</h3>
 <div id="leaderboard"></div>
 </div>
 
-<!-- HAPUS RANK -->
-<div class="glass">
-<h3>🗑️ Hapus Berdasarkan Peringkat (Admin)</h3>
-<input id="rankDelete" type="number" placeholder="Masukkan peringkat (1,2,3...)">
-<button onclick="hapusRank()">Hapus Rank</button>
+<div id="rankDeleteBox" class="glass" style="display:none;">
+<h3>🗑️ Hapus Peringkat</h3>
+<input id="rankDelete" type="number" placeholder="Contoh: 1">
+<button onclick="hapusRank()">Hapus</button>
 </div>
 
-<div class="glass">
-<h2>⏳ Pending (Admin)</h2>
+<div id="pendingBox" class="glass" style="display:none;">
+<h3>⏳ Pending</h3>
 <div id="pending"></div>
 </div>
 
@@ -179,16 +185,23 @@ button{
 <!-- LIST -->
 <div id="list" class="page">
 <div class="glass">
-<h2>📄 Semua Donatur</h2>
+<h3>📄 Semua Donatur</h3>
 <div id="listDonatur"></div>
 </div>
 </div>
 
-<!-- ADMIN -->
-<div id="adminBox">
-<input id="pass" placeholder="Admin">
+<!-- ADMIN BUTTON -->
+<div id="adminBtn" onclick="openAdmin()">⚙️</div>
+
+<!-- ADMIN PANEL -->
+<div id="adminPanel">
+<div class="adminBox">
+<h3>Admin Login</h3>
+<input id="pass" placeholder="Password">
 <button onclick="login()">Login</button>
 <button onclick="logout()">Logout</button>
+<button onclick="closeAdmin()">Tutup</button>
+</div>
 </div>
 
 <script>
@@ -210,18 +223,28 @@ const storage=firebase.storage();
 let isAdmin=localStorage.getItem("admin")==="true";
 let currentRanking=[];
 
+// ADMIN UI CONTROL
+if(isAdmin){
+ document.getElementById("rankDeleteBox").style.display="block";
+ document.getElementById("pendingBox").style.display="block";
+}
+
 // NAV
 function showPage(id){
  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
  document.getElementById(id).classList.add("active");
 }
 
+// ADMIN PANEL
+function openAdmin(){ adminPanel.style.display="flex"; }
+function closeAdmin(){ adminPanel.style.display="none"; }
+
 // LOGIN
 function login(){
  if(pass.value==="ADMIN123"){
   localStorage.setItem("admin","true");
   location.reload();
- } else alert("Salah");
+ } else alert("Password salah");
 }
 function logout(){
  localStorage.removeItem("admin");
@@ -236,26 +259,6 @@ function notif(text){
 }
 const notifBox=document.getElementById("notif");
 
-// CONFETTI
-function confetti(){
- for(let i=0;i<20;i++){
-  let d=document.createElement("div");
-  d.style.position="fixed";
-  d.style.width="5px";
-  d.style.height="5px";
-  d.style.background="gold";
-  d.style.top="0";
-  d.style.left=Math.random()*100+"%";
-  document.body.appendChild(d);
-  let fall=setInterval(()=>{
-   d.style.top=parseInt(d.style.top)+5+"px";
-   if(parseInt(d.style.top)>window.innerHeight){
-    clearInterval(fall); d.remove();
-   }
-  },20);
- }
-}
-
 // DONASI
 function kirimDonasi(){
  let nama=namaEl.value;
@@ -263,7 +266,7 @@ function kirimDonasi(){
  let file=buktiEl.files[0];
 
  if(!nama||!jumlah){
-  notif("Isi data dulu!");
+  notif("Isi dulu!");
   return;
  }
 
@@ -285,14 +288,13 @@ function simpan(nama,jumlah,url){
  });
 
  notif("🙏 Terima kasih! Semoga sukses 🤲");
- confetti();
 
  namaEl.value="";
  jumlahEl.value="";
  buktiEl.value="";
 }
 
-// LOAD
+// LOAD DATA
 db.ref("donasi").on("value",snap=>{
  let data=snap.val()||{};
  leaderboard.innerHTML="";
@@ -336,21 +338,30 @@ db.ref("donasi").on("value",snap=>{
  });
 });
 
-// HAPUS RANK
-function hapusRank(){
- if(!isAdmin){alert("Admin only");return;}
- let r=parseInt(rankDelete.value);
- let d=currentRanking[r-1];
- if(!d){alert("Tidak ada");return;}
- if(confirm("Hapus rank "+r+"?")){
-  db.ref("donasi/"+d.id).remove();
+// ACTION (AMAN)
+function acc(id){
+ if(!isAdmin){alert("Akses ditolak");return;}
+ db.ref("donasi/"+id).update({status:"approved"});
+}
+
+function hapus(id){
+ if(!isAdmin){alert("Akses ditolak");return;}
+ if(confirm("Hapus?")){
+  db.ref("donasi/"+id).remove();
  }
 }
 
-// ACTION
-function acc(id){ db.ref("donasi/"+id).update({status:"approved"}); }
-function hapus(id){
- if(confirm("Hapus data?")) db.ref("donasi/"+id).remove();
+function hapusRank(){
+ if(!isAdmin){alert("Akses ditolak");return;}
+
+ let r=parseInt(rankDelete.value);
+ let d=currentRanking[r-1];
+
+ if(!d){alert("Tidak ada");return;}
+
+ if(confirm("Hapus rank "+r+"?")){
+  db.ref("donasi/"+d.id).remove();
+ }
 }
 
 // shortcut
