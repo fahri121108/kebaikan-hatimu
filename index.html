@@ -3,52 +3,188 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Donasi Bayi</title>
+<title>Donasi Dewa</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 
 <style>
-body{font-family:Arial;background:#020617;color:white;margin:0;}
-.header{text-align:center;padding:15px;background:#111827;}
-.container{padding:15px;}
-.card{background:#111827;padding:10px;margin-top:10px;border-radius:10px;}
-.top1{background:gold;color:black;}
+body{
+ margin:0;
+ font-family:'Segoe UI';
+ background:radial-gradient(circle at top,#020617,#000);
+ color:white;
+}
+
+/* SPLASH */
+#splash{
+ position:fixed;
+ width:100%;
+ height:100%;
+ background:black;
+ display:flex;
+ justify-content:center;
+ align-items:center;
+ z-index:999;
+ animation:fadeOut 3s forwards 3s;
+}
+#splash h1{
+ color:#facc15;
+ text-align:center;
+ animation:zoom 2s ease;
+}
+@keyframes fadeOut{to{opacity:0;visibility:hidden;}}
+@keyframes zoom{from{transform:scale(.5);}to{transform:scale(1);}}
+
+/* NAV */
+.nav{
+ display:flex;
+ justify-content:space-between;
+ padding:10px;
+ background:#111827;
+}
+
+/* PAGE */
+.page{display:none;padding:15px;}
+.active{display:block;}
+
+/* GLASS */
+.glass{
+ background:rgba(255,255,255,0.05);
+ backdrop-filter:blur(15px);
+ border-radius:15px;
+ padding:15px;
+ margin-top:15px;
+ box-shadow:0 0 20px rgba(255,255,255,0.1);
+}
+
+/* INPUT */
+input,button{
+ width:100%;
+ padding:12px;
+ margin-top:10px;
+ border:none;
+ border-radius:10px;
+}
+button{
+ background:linear-gradient(45deg,#22c55e,#4ade80);
+ font-weight:bold;
+}
+
+/* QR */
+.qris{width:100%;border-radius:10px;}
+
+/* CARD */
+.card{
+ margin-top:10px;
+ padding:12px;
+ border-radius:12px;
+ animation:slideUp .5s ease;
+}
+@keyframes slideUp{
+ from{transform:translateY(30px);opacity:0;}
+ to{transform:translateY(0);opacity:1;}
+}
+
+/* TOP EFFECT */
+.top1{
+ background:linear-gradient(45deg,#facc15,#eab308);
+ color:black;
+ box-shadow:0 0 25px gold;
+ animation:pulse 1.5s infinite;
+}
 .top2{background:silver;color:black;}
 .top3{background:orange;color:black;}
-input,button{width:100%;padding:10px;margin-top:10px;border-radius:8px;border:none;}
-#adminBox{position:fixed;bottom:20px;right:20px;background:#111827;padding:10px;border-radius:10px;}
-.qris{width:100%;border-radius:10px;margin-top:10px;}
+@keyframes pulse{
+ 0%{transform:scale(1)}
+ 50%{transform:scale(1.05)}
+ 100%{transform:scale(1)}
+}
+
+/* NOTIF */
+#notif{
+ position:fixed;
+ top:20px;
+ left:50%;
+ transform:translateX(-50%);
+ background:#22c55e;
+ padding:10px 20px;
+ border-radius:20px;
+ display:none;
+ z-index:9999;
+}
+
+/* ADMIN */
+#adminBox{
+ position:fixed;
+ bottom:20px;
+ right:20px;
+ background:#111827;
+ padding:10px;
+ border-radius:10px;
+}
 </style>
 </head>
 
 <body>
 
-<div class="header">
-<h2>💛 Donasi untuk Bayi yang Ditemukan</h2>
-<p>Bantu kebutuhan susu & masa depan 🙏</p>
-<p><b>DANA:</b> 08XXXXXXXX</p>
-<img src="qris.jpg" class="qris">
-<p id="statusAdmin"></p>
+<div id="splash">
+<h1>💛 Donasi Bayi Ditemukan<br><br>Bantu masa depan mereka 🙏</h1>
 </div>
 
-<div class="container">
+<div id="notif"></div>
 
-<h3>💸 Kirim Donasi</h3>
+<div class="nav">
+<div>
+<button onclick="showPage('home')">Home</button>
+<button onclick="showPage('list')">Daftar Donatur</button>
+</div>
+</div>
+
+<!-- HOME -->
+<div id="home" class="page active">
+
+<div class="glass">
+<h2>💸 Donasi</h2>
+<p><b>DANA:</b> 08XXXXXXXX</p>
+<img src="qris.jpg" class="qris">
+
 <input id="nama" placeholder="Nama">
 <input id="jumlah" type="number" placeholder="Jumlah">
 <input id="bukti" type="file">
+
 <button onclick="kirimDonasi()">Kirim Donasi</button>
+</div>
 
-<h3>🏆 Leaderboard</h3>
+<div class="glass">
+<h2>🏆 Leaderboard</h2>
 <div id="leaderboard"></div>
+</div>
 
-<h3>⏳ Pending (Admin)</h3>
+<!-- HAPUS RANK -->
+<div class="glass">
+<h3>🗑️ Hapus Berdasarkan Peringkat (Admin)</h3>
+<input id="rankDelete" type="number" placeholder="Masukkan peringkat (1,2,3...)">
+<button onclick="hapusRank()">Hapus Rank</button>
+</div>
+
+<div class="glass">
+<h2>⏳ Pending (Admin)</h2>
 <div id="pending"></div>
+</div>
 
 </div>
 
+<!-- LIST -->
+<div id="list" class="page">
+<div class="glass">
+<h2>📄 Semua Donatur</h2>
+<div id="listDonatur"></div>
+</div>
+</div>
+
+<!-- ADMIN -->
 <div id="adminBox">
 <input id="pass" placeholder="Admin">
 <button onclick="login()">Login</button>
@@ -56,29 +192,33 @@ input,button{width:100%;padding:10px;margin-top:10px;border-radius:8px;border:no
 </div>
 
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyBnvcyMdTflihDPg68zsLG-9QxiyV36hgg",
-  authDomain: "miawwquenn.firebaseapp.com",
-  databaseURL: "https://miawwquenn-default-rtdb.firebaseio.com",
-  projectId: "miawwquenn",
-  storageBucket: "miawwquenn.firebasestorage.app",
-  messagingSenderId: "53904378444",
-  appId: "1:53904378444:web:2371e42cb4edf5905a82e9"
+// FIREBASE
+const firebaseConfig={
+ apiKey:"AIzaSyBnvcyMdTflihDPg68zsLG-9QxiyV36hgg",
+ authDomain:"miawwquenn.firebaseapp.com",
+ databaseURL:"https://miawwquenn-default-rtdb.firebaseio.com",
+ projectId:"miawwquenn",
+ storageBucket:"miawwquenn.firebasestorage.app",
+ messagingSenderId:"53904378444",
+ appId:"1:53904378444:web:2371e42cb4edf5905a82e9"
 };
-
 firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-const storage = firebase.storage();
 
-let isAdmin = localStorage.getItem("admin")==="true";
+const db=firebase.database();
+const storage=firebase.storage();
 
-if(isAdmin){
- document.getElementById("statusAdmin").innerText="👑 MODE ADMIN";
+let isAdmin=localStorage.getItem("admin")==="true";
+let currentRanking=[];
+
+// NAV
+function showPage(id){
+ document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+ document.getElementById(id).classList.add("active");
 }
 
 // LOGIN
 function login(){
- if(document.getElementById("pass").value==="ADMIN123"){
+ if(pass.value==="ADMIN123"){
   localStorage.setItem("admin","true");
   location.reload();
  } else alert("Salah");
@@ -88,43 +228,54 @@ function logout(){
  location.reload();
 }
 
-// BADGE
-function badge(j){
- if(j>=1000000)return "👑";
- if(j>=500000)return "💎";
- if(j>=100000)return "🔥";
- return "⭐";
+// NOTIF
+function notif(text){
+ notifBox.innerText=text;
+ notifBox.style.display="block";
+ setTimeout(()=>notifBox.style.display="none",3000);
+}
+const notifBox=document.getElementById("notif");
+
+// CONFETTI
+function confetti(){
+ for(let i=0;i<20;i++){
+  let d=document.createElement("div");
+  d.style.position="fixed";
+  d.style.width="5px";
+  d.style.height="5px";
+  d.style.background="gold";
+  d.style.top="0";
+  d.style.left=Math.random()*100+"%";
+  document.body.appendChild(d);
+  let fall=setInterval(()=>{
+   d.style.top=parseInt(d.style.top)+5+"px";
+   if(parseInt(d.style.top)>window.innerHeight){
+    clearInterval(fall); d.remove();
+   }
+  },20);
+ }
 }
 
-// 🔥 FIX DONASI (ANTI ERROR)
+// DONASI
 function kirimDonasi(){
  let nama=namaEl.value;
  let jumlah=jumlahEl.value;
  let file=buktiEl.files[0];
 
  if(!nama||!jumlah){
-  alert("Isi nama & jumlah!");
+  notif("Isi data dulu!");
   return;
  }
 
- // kalau ada file → upload
  if(file){
   let ref=storage.ref("bukti/"+Date.now());
   ref.put(file)
   .then(s=>s.ref.getDownloadURL())
-  .then(url=>{
-    simpan(nama,jumlah,url);
-  })
-  .catch(()=>{
-    // kalau gagal upload tetap lanjut
-    simpan(nama,jumlah,"-");
-  });
- } else {
-  simpan(nama,jumlah,"-");
- }
+  .then(url=>simpan(nama,jumlah,url))
+  .catch(()=>simpan(nama,jumlah,"-"));
+ } else simpan(nama,jumlah,"-");
 }
 
-// SIMPAN
 function simpan(nama,jumlah,url){
  db.ref("donasi").push({
   nama,
@@ -133,34 +284,35 @@ function simpan(nama,jumlah,url){
   status:"pending"
  });
 
- alert("🙏 Terima kasih!\nSemoga rezeki lancar & sehat selalu 🤲");
+ notif("🙏 Terima kasih! Semoga sukses 🤲");
+ confetti();
 
- // reset form
  namaEl.value="";
  jumlahEl.value="";
  buktiEl.value="";
 }
 
 // LOAD
-db.ref("donasi").on("value", snap=>{
+db.ref("donasi").on("value",snap=>{
  let data=snap.val()||{};
- let leader=leaderboard;
- let pendingEl=pending;
-
- leader.innerHTML="";
- pendingEl.innerHTML="";
+ leaderboard.innerHTML="";
+ pending.innerHTML="";
+ listDonatur.innerHTML="";
 
  let arr=[];
 
  for(let id in data){
   let d=data[id];
 
+  listDonatur.innerHTML+=`
+  <div class="card">${d.nama} - Rp${d.jumlah} (${d.status})</div>`;
+
   if(d.status==="approved") arr.push({id,...d});
 
   if(d.status==="pending" && isAdmin){
-   pendingEl.innerHTML+=`
+   pending.innerHTML+=`
    <div class="card">
-   ${d.nama} - Rp${d.jumlah}<br>
+   ${d.nama} - Rp${d.jumlah}
    <button onclick="acc('${id}')">ACC</button>
    <button onclick="hapus('${id}')">Hapus</button>
    </div>`;
@@ -168,6 +320,7 @@ db.ref("donasi").on("value", snap=>{
  }
 
  arr.sort((a,b)=>b.jumlah-a.jumlah);
+ currentRanking=arr;
 
  arr.forEach((d,i)=>{
   let cls="card";
@@ -175,28 +328,36 @@ db.ref("donasi").on("value", snap=>{
   if(i==1) cls+=" top2";
   if(i==2) cls+=" top3";
 
-  leader.innerHTML+=`
+  leaderboard.innerHTML+=`
   <div class="${cls}">
-  ${i+1}. ${d.nama} ${badge(d.jumlah)}<br>
-  Rp${d.jumlah}
+  ${i+1}. ${d.nama}<br>Rp${d.jumlah}
   ${isAdmin?`<button onclick="hapus('${d.id}')">Hapus</button>`:""}
   </div>`;
  });
 });
 
-// ACTION
-function acc(id){
- db.ref("donasi/"+id).update({status:"approved"});
+// HAPUS RANK
+function hapusRank(){
+ if(!isAdmin){alert("Admin only");return;}
+ let r=parseInt(rankDelete.value);
+ let d=currentRanking[r-1];
+ if(!d){alert("Tidak ada");return;}
+ if(confirm("Hapus rank "+r+"?")){
+  db.ref("donasi/"+d.id).remove();
+ }
 }
+
+// ACTION
+function acc(id){ db.ref("donasi/"+id).update({status:"approved"}); }
 function hapus(id){
- if(confirm("Hapus?")) db.ref("donasi/"+id).remove();
+ if(confirm("Hapus data?")) db.ref("donasi/"+id).remove();
 }
 
 // shortcut
-const namaEl=document.getElementById("nama");
-const jumlahEl=document.getElementById("jumlah");
-const buktiEl=document.getElementById("bukti");
+const namaEl=nama;
+const jumlahEl=jumlah;
+const buktiEl=bukti;
 </script>
 
 </body>
-    </html>
+</html>
