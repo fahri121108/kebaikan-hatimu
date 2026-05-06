@@ -3,13 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KEBAIKAN MU SURGA MENUNGGUMU</title>
+<title>Donasi Bayi Ditemukan</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
-
-<!-- CHART -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
@@ -71,20 +69,73 @@ canvas{
  border-radius:10px;
  padding:10px;
 }
+
+/* NOTIF */
+#notif{
+ position:fixed;
+ top:20px;
+ left:50%;
+ transform:translateX(-50%);
+ background:#22c55e;
+ padding:10px 20px;
+ border-radius:20px;
+ display:none;
+ z-index:9999;
+}
+
+/* ADMIN BUTTON */
+#adminBtn{
+ position:fixed;
+ bottom:20px;
+ right:20px;
+ background:#22c55e;
+ border-radius:50%;
+ width:55px;
+ height:55px;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ font-size:22px;
+}
+
+/* ADMIN PANEL */
+#adminPanel{
+ position:fixed;
+ top:0;
+ left:0;
+ width:100%;
+ height:100%;
+ background:rgba(0,0,0,0.7);
+ display:none;
+ align-items:center;
+ justify-content:center;
+}
+
+.adminBox{
+ background:#111827;
+ padding:20px;
+ border-radius:12px;
+ width:90%;
+ max-width:300px;
+}
 </style>
 </head>
 
 <body>
+
+<div id="notif"></div>
 
 <div class="nav">
 <button onclick="showPage('home')">Home</button>
 <button onclick="showPage('list')">Donatur</button>
 </div>
 
+<!-- HOME -->
 <div id="home" class="page active">
 
 <div class="glass">
-<h3>💸 Donasi</h3>
+<h2>💛 Donasi Bayi Ditemukan</h2>
+<p>Bantu masa depan mereka 🙏</p>
 <p><b>DANA:</b> 089610921722</p>
 <img src="qris.jpg" style="width:100%;border-radius:10px;">
 <input id="nama" placeholder="Nama">
@@ -115,10 +166,24 @@ canvas{
 
 </div>
 
+<!-- LIST -->
 <div id="list" class="page">
 <div class="glass">
 <h3>📄 Semua Donatur</h3>
 <div id="listDonatur"></div>
+</div>
+</div>
+
+<!-- ADMIN -->
+<div id="adminBtn" onclick="openAdmin()">⚙️</div>
+
+<div id="adminPanel">
+<div class="adminBox">
+<h3>Admin Login</h3>
+<input id="pass" placeholder="Password">
+<button onclick="login()">Login</button>
+<button onclick="logout()">Logout</button>
+<button onclick="closeAdmin()">Tutup</button>
 </div>
 </div>
 
@@ -136,7 +201,6 @@ const firebaseConfig={
 firebase.initializeApp(firebaseConfig);
 
 const db=firebase.database();
-const storage=firebase.storage();
 
 let isAdmin=localStorage.getItem("admin")==="true";
 
@@ -149,12 +213,39 @@ function showPage(id){
  document.getElementById(id).classList.add("active");
 }
 
+// ADMIN
+function openAdmin(){ adminPanel.style.display="flex"; }
+function closeAdmin(){ adminPanel.style.display="none"; }
+
+function login(){
+ if(pass.value==="ADMIN123"){
+  localStorage.setItem("admin","true");
+  location.reload();
+ } else alert("Password salah");
+}
+
+function logout(){
+ localStorage.removeItem("admin");
+ location.reload();
+}
+
+// NOTIF
+function notif(text){
+ notifBox.innerText=text;
+ notifBox.style.display="block";
+ setTimeout(()=>notifBox.style.display="none",3000);
+}
+const notifBox=document.getElementById("notif");
+
 // DONASI
 function kirimDonasi(){
  let nama=namaEl.value;
  let jumlah=jumlahEl.value;
 
- if(!nama||!jumlah){alert("Isi dulu");return;}
+ if(!nama||!jumlah){
+  notif("Isi dulu!");
+  return;
+ }
 
  db.ref("donasi").push({
   nama,
@@ -162,16 +253,16 @@ function kirimDonasi(){
   status:"pending"
  });
 
- alert("Terima kasih 🙏");
+ notif("🙏 Terima kasih! Semoga sukses 🤲");
 
  namaEl.value="";
  jumlahEl.value="";
 }
 
-// CHART INIT
+// CHART
 let chart=new Chart(document.getElementById("chart"),{
  type:"bar",
- data:{labels:[],datasets:[{label:"Donasi",data:[]}]}
+ data:{labels:[],datasets:[{data:[]}]}
 });
 
 // LOAD DATA
@@ -198,7 +289,6 @@ db.ref("donasi").on("value",snap=>{
   if(d.status==="approved"){
    arr.push({id,...d});
    total+=d.jumlah;
-
    labels.push(d.nama);
    values.push(d.jumlah);
   }
@@ -213,15 +303,12 @@ db.ref("donasi").on("value",snap=>{
   }
  }
 
- // TOTAL
  document.getElementById("total").innerText="Rp"+total;
 
- // CHART UPDATE
  chart.data.labels=labels;
  chart.data.datasets[0].data=values;
  chart.update();
 
- // RANKING
  arr.sort((a,b)=>b.jumlah-a.jumlah);
 
  arr.forEach((d,i)=>{
@@ -243,6 +330,7 @@ function acc(id){
  if(!isAdmin)return;
  db.ref("donasi/"+id).update({status:"approved"});
 }
+
 function hapus(id){
  if(!isAdmin)return;
  if(confirm("Hapus?")){
@@ -256,4 +344,4 @@ const jumlahEl=jumlah;
 </script>
 
 </body>
-</html>
+ </html>
