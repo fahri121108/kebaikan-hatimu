@@ -17,7 +17,6 @@ body{
     color:white;
 }
 
-/* NAV */
 .nav{
     display:flex;
     justify-content:space-between;
@@ -25,7 +24,6 @@ body{
     background:#111827;
 }
 
-/* BUTTON */
 button{
     padding:10px;
     border:none;
@@ -34,11 +32,9 @@ button{
     color:black;
 }
 
-/* PAGE */
 .page{ display:none; padding:15px;}
 .active{ display:block; }
 
-/* CARD */
 .card{
     background:#111827;
     margin-top:10px;
@@ -46,24 +42,10 @@ button{
     border-radius:10px;
 }
 
-/* TOP */
 .top1{ background:gold; color:black;}
 .top2{ background:silver; color:black;}
 .top3{ background:orange; color:black;}
 
-/* LOGIN */
-#loginPage{
-    height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-}
-.loginBox{
-    background:#111827;
-    padding:20px;
-    border-radius:10px;
-    width:250px;
-}
 input{
     width:100%;
     padding:10px;
@@ -71,30 +53,24 @@ input{
     border-radius:8px;
     border:none;
 }
+
+#adminBox{
+    position:fixed;
+    bottom:20px;
+    right:20px;
+    background:#111827;
+    padding:10px;
+    border-radius:10px;
+}
 </style>
 </head>
 
 <body>
 
-<!-- LOGIN -->
-<div id="loginPage">
-<div class="loginBox">
-<h3>Login Admin</h3>
-<input type="password" id="pass" placeholder="Password">
-<button onclick="login()">Login</button>
-</div>
-</div>
-
-<!-- MAIN -->
-<div id="main" style="display:none">
-
 <div class="nav">
 <div>
 <button onclick="showPage('home')">Home</button>
 <button onclick="showPage('list')">Donatur</button>
-</div>
-<div>
-<button onclick="logout()">Logout</button>
 </div>
 </div>
 
@@ -114,21 +90,25 @@ input{
 <h2>🏆 Leaderboard</h2>
 <div id="leaderboard"></div>
 
-<h2>⏳ Pending</h2>
+<h2>⏳ Pending (Admin)</h2>
 <div id="pending"></div>
 
 </div>
 
-<!-- LIST DONATUR -->
+<!-- LIST -->
 <div id="list" class="page">
 <h2>📄 Semua Donatur</h2>
 <div id="listDonatur"></div>
 </div>
 
+<!-- ADMIN -->
+<div id="adminBox">
+<input type="password" id="pass" placeholder="Admin">
+<button onclick="login()">Login</button>
+<button onclick="logout()">Logout</button>
 </div>
 
 <script>
-// ✅ FIREBASE CONFIG SUDAH TERPASANG
 const firebaseConfig = {
   apiKey: "AIzaSyBnvcyMdTflihDPg68zsLG-9QxiyV36hgg",
   authDomain: "miawwquenn.firebaseapp.com",
@@ -151,8 +131,9 @@ function login(){
     let p = document.getElementById("pass").value;
     if(p==="ADMIN123"){
         localStorage.setItem("admin","true");
+        alert("Admin aktif");
         location.reload();
-    }else{
+    } else {
         alert("Password salah");
     }
 }
@@ -161,12 +142,6 @@ function login(){
 function logout(){
     localStorage.removeItem("admin");
     location.reload();
-}
-
-// INIT
-if(isAdmin){
-    document.getElementById("loginPage").style.display="none";
-    document.getElementById("main").style.display="block";
 }
 
 // NAV
@@ -225,12 +200,19 @@ db.ref("donasi").on("value", snap=>{
     for(let id in data){
         let d=data[id];
 
+        // LIST
         list.innerHTML+=`
         <div class="card">
         ${d.nama} - Rp${d.jumlah} (${d.status})
         </div>`;
 
-        if(d.status==="approved") arr.push({...d,id});
+        if(d.status==="approved"){
+            arr.push({
+                id:id,
+                nama:d.nama,
+                jumlah:d.jumlah
+            });
+        }
 
         if(d.status==="pending" && isAdmin){
             pending.innerHTML+=`
@@ -255,7 +237,7 @@ db.ref("donasi").on("value", snap=>{
         <div class="${cls}">
         ${i+1}. ${d.nama} - ${badge(d.jumlah)}<br>
         💰 Rp${d.jumlah}<br>
-        ${isAdmin ? `<button onclick="hapus('${d.id}')">Hapus</button>`:""}
+        ${isAdmin ? `<button onclick="hapus('${d.id}')">🗑️ Hapus</button>`:""}
         </div>`;
     });
 });
@@ -264,8 +246,11 @@ db.ref("donasi").on("value", snap=>{
 function acc(id){
     db.ref("donasi/"+id).update({status:"approved"});
 }
+
 function hapus(id){
-    db.ref("donasi/"+id).remove();
+    if(confirm("Yakin mau hapus data ini?")){
+        db.ref("donasi/"+id).remove();
+    }
 }
 </script>
 
