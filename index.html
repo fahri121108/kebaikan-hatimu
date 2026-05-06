@@ -3,245 +3,198 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DONASI DEMI KEBAIKAN</title>
+<title>Donasi Ultimate Pro</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 
 <style>
-body {
+body{
     margin:0;
     font-family:'Segoe UI';
-    background: radial-gradient(circle at top,#020617,#000);
+    background:#020617;
     color:white;
 }
 
-/* LANDING */
-#landing {
-    position:fixed;
-    width:100%;
-    height:100%;
-    background:black;
+/* NAV */
+.nav{
     display:flex;
-    justify-content:center;
-    align-items:center;
-    text-align:center;
-    z-index:999;
-    animation: fadeOut 4s forwards 3s;
-}
-#landing h1 {
-    color:#facc15;
-    font-size:22px;
-    max-width:320px;
-}
-@keyframes fadeOut {
-    to {opacity:0; visibility:hidden;}
+    justify-content:space-between;
+    padding:10px;
+    background:#111827;
 }
 
-/* CONTAINER */
-.container {
-    max-width:500px;
-    margin:auto;
-    padding:15px;
-}
-
-/* GLASS */
-.glass {
-    background: rgba(255,255,255,0.05);
-    backdrop-filter: blur(15px);
-    border-radius:15px;
-    padding:15px;
-    margin-top:15px;
-    box-shadow:0 0 20px rgba(255,255,255,0.05);
-}
-
-/* INPUT */
-input, button {
-    width:100%;
-    margin-top:10px;
-    padding:12px;
+/* BUTTON */
+button{
+    padding:10px;
     border:none;
-    border-radius:10px;
-}
-button {
-    background:linear-gradient(45deg,#22c55e,#4ade80);
-    font-weight:bold;
+    border-radius:8px;
+    background:#22c55e;
+    color:black;
 }
 
-/* QR */
-.qris {
-    width:100%;
-    border-radius:12px;
-}
+/* PAGE */
+.page{ display:none; padding:15px;}
+.active{ display:block; }
 
 /* CARD */
-.card {
+.card{
+    background:#111827;
     margin-top:10px;
-    padding:12px;
-    border-radius:12px;
-    animation: slideUp .5s ease;
-}
-@keyframes slideUp {
-    from {transform:translateY(30px); opacity:0;}
-    to {transform:translateY(0); opacity:1;}
+    padding:10px;
+    border-radius:10px;
 }
 
 /* TOP */
-.top1 {
-    background:linear-gradient(45deg,#facc15,#eab308);
-    color:black;
-    box-shadow:0 0 30px gold;
-    animation:pulse 1.5s infinite;
-}
-@keyframes pulse {
-    0%{transform:scale(1)}
-    50%{transform:scale(1.05)}
-    100%{transform:scale(1)}
-}
-.top2 {
-    background:linear-gradient(45deg,#e5e7eb,#9ca3af);
-    color:black;
-}
-.top3 {
-    background:linear-gradient(45deg,#fb923c,#ea580c);
-    color:black;
-}
-
-/* NOTIF */
-#notif {
-    position:fixed;
-    top:20px;
-    left:50%;
-    transform:translateX(-50%);
-    background:#22c55e;
-    padding:10px 20px;
-    border-radius:20px;
-    display:none;
-    z-index:9999;
-}
+.top1{ background:gold; color:black;}
+.top2{ background:silver; color:black;}
+.top3{ background:orange; color:black;}
 
 /* LOGIN */
-#loginBox {
-    position:fixed;
-    bottom:20px;
-    right:20px;
+#loginPage{
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+.loginBox{
+    background:#111827;
+    padding:20px;
+    border-radius:10px;
+    width:250px;
+}
+input{
+    width:100%;
+    padding:10px;
+    margin-top:10px;
+    border-radius:8px;
+    border:none;
 }
 </style>
 </head>
 
 <body>
 
-<div id="notif">💰 Donasi Baru Masuk!</div>
-
-<div id="landing">
-<h1>
-Donasi untuk Bayi yang Ditemukan 💛<br><br>
-Bantu kebutuhan hidup dan masa depan mereka 🙏
-</h1>
+<!-- LOGIN -->
+<div id="loginPage">
+<div class="loginBox">
+<h3>Login Admin</h3>
+<input type="password" id="pass" placeholder="Password">
+<button onclick="login()">Login</button>
+</div>
 </div>
 
-<div class="container">
+<!-- MAIN -->
+<div id="main" style="display:none">
 
-<div class="glass">
+<div class="nav">
+<div>
+<button onclick="showPage('home')">Home</button>
+<button onclick="showPage('list')">Donatur</button>
+</div>
+<div>
+<button onclick="logout()">Logout</button>
+</div>
+</div>
+
+<!-- HOME -->
+<div id="home" class="page active">
+
 <h2>💸 Donasi</h2>
-<p><b>DANA:</b> 089610921722</p>
-<img src="qris.jpg" class="qris">
+<p>DANA: 08XXXXXXX</p>
+<img src="qris.jpg" width="100%">
 
 <input type="text" id="nama" placeholder="Nama">
 <input type="number" id="jumlah" placeholder="Jumlah">
 <input type="file" id="bukti">
 
 <button onclick="kirimDonasi()">Kirim Donasi</button>
-</div>
 
-<div class="glass">
 <h2>🏆 Leaderboard</h2>
 <div id="leaderboard"></div>
-</div>
 
-<div class="glass">
 <h2>⏳ Pending</h2>
 <div id="pending"></div>
-</div>
 
 </div>
 
-<div id="loginBox">
-<input type="password" id="pass" placeholder="Admin">
-<button onclick="login()">Login</button>
+<!-- LIST DONATUR -->
+<div id="list" class="page">
+<h2>📄 Semua Donatur</h2>
+<div id="listDonatur"></div>
+</div>
+
 </div>
 
 <script>
+// ✅ FIREBASE CONFIG SUDAH TERPASANG
 const firebaseConfig = {
-    apiKey:"ISI",
-    authDomain:"ISI",
-    databaseURL:"ISI",
-    projectId:"ISI",
-    storageBucket:"ISI",
-    messagingSenderId:"ISI",
-    appId:"ISI"
+  apiKey: "AIzaSyBnvcyMdTflihDPg68zsLG-9QxiyV36hgg",
+  authDomain: "miawwquenn.firebaseapp.com",
+  databaseURL: "https://miawwquenn-default-rtdb.firebaseio.com",
+  projectId: "miawwquenn",
+  storageBucket: "miawwquenn.firebasestorage.app",
+  messagingSenderId: "53904378444",
+  appId: "1:53904378444:web:2371e42cb4edf5905a82e9",
+  measurementId: "G-TV2M5E49PR"
 };
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const storage = firebase.storage();
 
-let isAdmin=false;
+let isAdmin = localStorage.getItem("admin") === "true";
 
 // LOGIN
 function login(){
-    if(document.getElementById("pass").value==="ADMIN123"){
-        isAdmin=true;
-        alert("Admin aktif");
-    } else {
+    let p = document.getElementById("pass").value;
+    if(p==="ADMIN123"){
+        localStorage.setItem("admin","true");
+        location.reload();
+    }else{
         alert("Password salah");
     }
 }
 
-// NOTIF
-function showNotif(text){
-    let n=document.getElementById("notif");
-    n.innerText = text;
-    n.style.display="block";
-    setTimeout(()=>n.style.display="none",3000);
+// LOGOUT
+function logout(){
+    localStorage.removeItem("admin");
+    location.reload();
 }
 
-// CONFETTI
-function confetti(){
-    for(let i=0;i<30;i++){
-        let div=document.createElement("div");
-        div.style.position="fixed";
-        div.style.width="5px";
-        div.style.height="5px";
-        div.style.background="gold";
-        div.style.top="0";
-        div.style.left=Math.random()*100+"%";
-        document.body.appendChild(div);
+// INIT
+if(isAdmin){
+    document.getElementById("loginPage").style.display="none";
+    document.getElementById("main").style.display="block";
+}
 
-        let fall=setInterval(()=>{
-            let top=parseFloat(div.style.top);
-            div.style.top=(top+5)+"px";
-            if(top>window.innerHeight){
-                clearInterval(fall);
-                div.remove();
-            }
-        },20);
-    }
+// NAV
+function showPage(id){
+    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+}
+
+// BADGE
+function badge(j){
+    if(j>=1000000) return "👑 LEGEND";
+    if(j>=500000) return "💎 SULTAN";
+    if(j>=100000) return "🔥 VIP";
+    return "⭐";
 }
 
 // KIRIM DONASI
 function kirimDonasi(){
-    let nama=document.getElementById("nama").value;
-    let jumlah=document.getElementById("jumlah").value;
-    let file=document.getElementById("bukti").files[0];
+    let nama = document.getElementById("nama").value;
+    let jumlah = document.getElementById("jumlah").value;
+    let file = document.getElementById("bukti").files[0];
 
     if(!nama||!jumlah||!file){
         alert("Lengkapi!");
         return;
     }
 
-    let ref=storage.ref("bukti/"+Date.now());
+    let ref = storage.ref("bukti/"+Date.now());
     ref.put(file).then(s=>{
         s.ref.getDownloadURL().then(url=>{
             db.ref("donasi").push({
@@ -250,70 +203,59 @@ function kirimDonasi(){
                 bukti:url,
                 status:"pending"
             });
-            alert("Donasi berhasil dikirim 🙏");
+
+            alert("🙏 Terima kasih atas donasi Anda!\nSemoga rezeki dilancarkan, sehat selalu, dan sukses 🤲");
         });
     });
 }
 
-// NOTIF KHUSUS ADMIN (DONASI BARU)
-let firstLoad = true;
-
-db.ref("donasi").on("child_added", snap => {
-    let data = snap.val();
-
-    if (firstLoad) return;
-
-    if (isAdmin && data.status === "pending") {
-        showNotif("💰 Donasi baru dari " + data.nama);
-        confetti();
-    }
-});
-
-setTimeout(() => {
-    firstLoad = false;
-}, 2000);
-
 // LOAD DATA
 db.ref("donasi").on("value", snap=>{
-    let data=snap.val();
-    let leader=document.getElementById("leaderboard");
-    let pending=document.getElementById("pending");
+    let data = snap.val() || {};
+    let leader = document.getElementById("leaderboard");
+    let pending = document.getElementById("pending");
+    let list = document.getElementById("listDonatur");
 
     leader.innerHTML="";
     pending.innerHTML="";
+    list.innerHTML="";
 
-    let list=[];
+    let arr=[];
 
     for(let id in data){
         let d=data[id];
 
-        if(d.status==="approved") list.push(d);
+        list.innerHTML+=`
+        <div class="card">
+        ${d.nama} - Rp${d.jumlah} (${d.status})
+        </div>`;
+
+        if(d.status==="approved") arr.push({...d,id});
 
         if(d.status==="pending" && isAdmin){
             pending.innerHTML+=`
-            <div class="card glass">
+            <div class="card">
             ${d.nama} - Rp${d.jumlah}<br>
-            <img src="${d.bukti}" width="100"><br>
+            <img src="${d.bukti}" width="80"><br>
             <button onclick="acc('${id}')">ACC</button>
             <button onclick="hapus('${id}')">Hapus</button>
             </div>`;
         }
     }
 
-    list.sort((a,b)=>b.jumlah-a.jumlah);
+    arr.sort((a,b)=>b.jumlah-a.jumlah);
 
-    list.forEach((d,i)=>{
-        let cls="card glass";
+    arr.forEach((d,i)=>{
+        let cls="card";
         if(i==0) cls+=" top1";
         if(i==1) cls+=" top2";
         if(i==2) cls+=" top3";
 
-        let medal=["👑","🥈","🥉"][i]||"🎖️";
-
         leader.innerHTML+=`
         <div class="${cls}">
-        ${medal} ${d.nama}<br>
-        💰 Rp${d.jumlah}
+        ${i+1}. ${d.nama} - ${badge(d.jumlah)}<br>
+        💰 Rp${d.jumlah}<br>
+        ${isAdmin ? `<button onclick="hapus('${d.id}')">Hapus</button>`:""}
         </div>`;
     });
 });
@@ -328,4 +270,4 @@ function hapus(id){
 </script>
 
 </body>
-  </html>
+</html>
