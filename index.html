@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Donasi Ultimate Pro</title>
+<title>Donasi Bayi</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
@@ -11,42 +11,34 @@
 
 <style>
 body{
-    margin:0;
-    font-family:'Segoe UI';
+    font-family:Arial;
     background:#020617;
     color:white;
+    margin:0;
 }
 
-.nav{
-    display:flex;
-    justify-content:space-between;
-    padding:10px;
+.header{
+    padding:15px;
+    text-align:center;
     background:#111827;
 }
 
-button{
-    padding:10px;
-    border:none;
-    border-radius:8px;
-    background:#22c55e;
-    color:black;
+.container{
+    padding:15px;
 }
-
-.page{ display:none; padding:15px;}
-.active{ display:block; }
 
 .card{
     background:#111827;
-    margin-top:10px;
     padding:10px;
+    margin-top:10px;
     border-radius:10px;
 }
 
-.top1{ background:gold; color:black;}
-.top2{ background:silver; color:black;}
-.top3{ background:orange; color:black;}
+.top1{background:gold;color:black;}
+.top2{background:silver;color:black;}
+.top3{background:orange;color:black;}
 
-input{
+input,button{
     width:100%;
     padding:10px;
     margin-top:10px;
@@ -67,43 +59,30 @@ input{
 
 <body>
 
-<div class="nav">
-<div>
-<button onclick="showPage('home')">Home</button>
-<button onclick="showPage('list')">Donatur</button>
+<div class="header">
+<h2>💛 Donasi untuk Bayi yang Ditemukan</h2>
+<p>Bantu kebutuhan susu, kesehatan, dan masa depan 🙏</p>
+<p id="statusAdmin"></p>
 </div>
-</div>
 
-<!-- HOME -->
-<div id="home" class="page active">
+<div class="container">
 
-<h2>💸 Donasi</h2>
-<p>DANA: 08XXXXXXX</p>
-<img src="qris.jpg" width="100%">
-
-<input type="text" id="nama" placeholder="Nama">
-<input type="number" id="jumlah" placeholder="Jumlah">
-<input type="file" id="bukti">
-
+<h3>💸 Donasi</h3>
+<input id="nama" placeholder="Nama">
+<input id="jumlah" type="number" placeholder="Jumlah">
+<input id="bukti" type="file">
 <button onclick="kirimDonasi()">Kirim Donasi</button>
 
-<h2>🏆 Leaderboard</h2>
+<h3>🏆 Leaderboard</h3>
 <div id="leaderboard"></div>
 
-<h2>⏳ Pending (Admin)</h2>
+<h3>⏳ Pending (Admin)</h3>
 <div id="pending"></div>
 
 </div>
 
-<!-- LIST -->
-<div id="list" class="page">
-<h2>📄 Semua Donatur</h2>
-<div id="listDonatur"></div>
-</div>
-
-<!-- ADMIN -->
 <div id="adminBox">
-<input type="password" id="pass" placeholder="Admin">
+<input id="pass" placeholder="Admin">
 <button onclick="login()">Login</button>
 <button onclick="logout()">Logout</button>
 </div>
@@ -116,8 +95,7 @@ const firebaseConfig = {
   projectId: "miawwquenn",
   storageBucket: "miawwquenn.firebasestorage.app",
   messagingSenderId: "53904378444",
-  appId: "1:53904378444:web:2371e42cb4edf5905a82e9",
-  measurementId: "G-TV2M5E49PR"
+  appId: "1:53904378444:web:2371e42cb4edf5905a82e9"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -126,12 +104,16 @@ const storage = firebase.storage();
 
 let isAdmin = localStorage.getItem("admin") === "true";
 
+// tampilkan status admin
+if(isAdmin){
+    document.getElementById("statusAdmin").innerText="👑 MODE ADMIN AKTIF";
+}
+
 // LOGIN
 function login(){
-    let p = document.getElementById("pass").value;
-    if(p==="ADMIN123"){
+    if(document.getElementById("pass").value==="ADMIN123"){
         localStorage.setItem("admin","true");
-        alert("Admin aktif");
+        alert("Login berhasil");
         location.reload();
     } else {
         alert("Password salah");
@@ -144,12 +126,6 @@ function logout(){
     location.reload();
 }
 
-// NAV
-function showPage(id){
-    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-    document.getElementById(id).classList.add("active");
-}
-
 // BADGE
 function badge(j){
     if(j>=1000000) return "👑 LEGEND";
@@ -158,67 +134,60 @@ function badge(j){
     return "⭐";
 }
 
-// KIRIM DONASI
+// KIRIM DONASI (FIX)
 function kirimDonasi(){
-    let nama = document.getElementById("nama").value;
-    let jumlah = document.getElementById("jumlah").value;
-    let file = document.getElementById("bukti").files[0];
+    let nama=document.getElementById("nama").value;
+    let jumlah=document.getElementById("jumlah").value;
+    let file=document.getElementById("bukti").files[0];
 
     if(!nama||!jumlah||!file){
-        alert("Lengkapi!");
+        alert("Lengkapi semua!");
         return;
     }
 
-    let ref = storage.ref("bukti/"+Date.now());
-    ref.put(file).then(s=>{
-        s.ref.getDownloadURL().then(url=>{
-            db.ref("donasi").push({
-                nama,
-                jumlah:parseInt(jumlah),
-                bukti:url,
-                status:"pending"
-            });
+    let ref=storage.ref("bukti/"+Date.now());
 
-            alert("🙏 Terima kasih atas donasi Anda!\nSemoga rezeki dilancarkan, sehat selalu, dan sukses 🤲");
+    ref.put(file)
+    .then(s=>s.ref.getDownloadURL())
+    .then(url=>{
+        return db.ref("donasi").push({
+            nama,
+            jumlah:parseInt(jumlah),
+            bukti:url,
+            status:"pending"
         });
+    })
+    .then(()=>{
+        alert("🙏 Terima kasih atas donasi Anda!\nSemoga sehat & rezeki lancar 🤲");
+    })
+    .catch(err=>{
+        alert("Error: "+err.message);
+        console.log(err);
     });
 }
 
-// LOAD DATA
+// LOAD DATA (FIX)
 db.ref("donasi").on("value", snap=>{
-    let data = snap.val() || {};
-    let leader = document.getElementById("leaderboard");
-    let pending = document.getElementById("pending");
-    let list = document.getElementById("listDonatur");
+    let data=snap.val()||{};
+    let leader=document.getElementById("leaderboard");
+    let pending=document.getElementById("pending");
 
     leader.innerHTML="";
     pending.innerHTML="";
-    list.innerHTML="";
 
     let arr=[];
 
     for(let id in data){
         let d=data[id];
 
-        // LIST
-        list.innerHTML+=`
-        <div class="card">
-        ${d.nama} - Rp${d.jumlah} (${d.status})
-        </div>`;
-
         if(d.status==="approved"){
-            arr.push({
-                id:id,
-                nama:d.nama,
-                jumlah:d.jumlah
-            });
+            arr.push({id,...d});
         }
 
         if(d.status==="pending" && isAdmin){
             pending.innerHTML+=`
             <div class="card">
             ${d.nama} - Rp${d.jumlah}<br>
-            <img src="${d.bukti}" width="80"><br>
             <button onclick="acc('${id}')">ACC</button>
             <button onclick="hapus('${id}')">Hapus</button>
             </div>`;
@@ -236,8 +205,8 @@ db.ref("donasi").on("value", snap=>{
         leader.innerHTML+=`
         <div class="${cls}">
         ${i+1}. ${d.nama} - ${badge(d.jumlah)}<br>
-        💰 Rp${d.jumlah}<br>
-        ${isAdmin ? `<button onclick="hapus('${d.id}')">🗑️ Hapus</button>`:""}
+        Rp${d.jumlah}
+        ${isAdmin?`<button onclick="hapus('${d.id}')">Hapus</button>`:""}
         </div>`;
     });
 });
@@ -248,7 +217,7 @@ function acc(id){
 }
 
 function hapus(id){
-    if(confirm("Yakin mau hapus data ini?")){
+    if(confirm("Hapus data?")){
         db.ref("donasi/"+id).remove();
     }
 }
